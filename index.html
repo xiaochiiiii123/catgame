@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>喵星勇士：歐趴大作戰</title>
+    <style>
+        body { 
+            background-color: #222; display: flex; justify-content: center; 
+            align-items: center; height: 100vh; margin: 0; 
+            font-family: "微軟正黑體", sans-serif; user-select: none; 
+        }
+        
+        #game-window { 
+            width: 800px; height: 600px; background-image: url('bg.jpg'); 
+            background-size: cover; background-position: center; 
+            position: relative; border: 6px solid #444; border-radius: 12px; 
+            overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.8); 
+        }
+
+        #top-bar { 
+            background: rgba(0, 0, 0, 0.7); color: #fff; padding: 15px 25px; 
+            font-size: 20px; font-weight: bold; display: flex; justify-content: space-between;
+            position: relative; z-index: 10;
+        }
+
+        .game-btn {
+            background: #ffaa00; border: 3px solid #fff; border-radius: 8px;
+            padding: 10px 20px; font-size: 20px; font-weight: bold; cursor: pointer;
+            color: #333; transition: 0.1s; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .game-btn:active { transform: scale(0.95); background: #ffcc00; box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+
+        /* 小窩畫面 */
+        #room-screen { width: 100%; height: 100%; position: absolute; top:0; left:0; }
+        #cat { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); width: 250px; cursor: pointer; }
+        #cat:active { transform: translateX(-50%) scale(0.92); }
+        
+        /* 底部按鈕區 */
+        .room-buttons { position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px; }
+        #btn-go-battle { background: #ff4757; color: white; }
+        #btn-go-shop { background: #3498db; color: white; }
+
+        /* 戰鬥畫面 */
+        #battle-screen { width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; position: absolute; top: 0; left: 0; }
+        
+        .hp-board { display: flex; justify-content: space-between; padding: 70px 20px 20px 20px; color: white; font-size: 20px; font-weight: bold; }
+        .hp-bar-bg { width: 250px; height: 20px; background: #333; border: 2px solid #fff; margin-top: 5px; border-radius: 10px; overflow: hidden;}
+        .hp-bar-fill { height: 100%; transition: width 0.3s ease; }
+        .green { background: #2ecc71; }
+        .red { background: #e74c3c; }
+
+        #battle-cat { position: absolute; bottom: 150px; left: 50px; width: 200px; }
+        #boss { position: absolute; bottom: 120px; right: 50px; width: 300px; }
+
+        #battle-ui { position: absolute; bottom: 0; width: 100%; background: #222; border-top: 4px solid #fff; padding: 15px; box-sizing: border-box; }
+        #battle-log { color: #ffeb3b; font-size: 18px; margin-bottom: 10px; height: 24px; }
+
+        /* 商店畫面 */
+        #shop-screen { width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; position: absolute; top: 0; left: 0; padding-top: 60px; box-sizing: border-box; color: white; }
+        .shop-title { text-align: center; color: #ffaa00; font-size: 32px; margin-top: 20px; text-shadow: 2px 2px 0 #000; }
+        .shop-items-container { display: flex; justify-content: center; gap: 30px; margin-top: 40px; }
+        .shop-item-card { background: #333; border: 4px solid #555; border-radius: 15px; padding: 20px; text-align: center; width: 220px; }
+        .shop-item-card h3 { color: #2ecc71; margin-top: 0; }
+        .shop-item-card p { color: #ccc; height: 40px; }
+        #btn-leave-shop { position: absolute; bottom: 20px; right: 20px; background: #95a5a6; }
+
+        /* 動效 */
+        .shake { animation: shakeAnim 0.3s; }
+        @keyframes shakeAnim { 0% { transform: translateX(0); } 25% { transform: translateX(-10px); filter: brightness(2); } 50% { transform: translateX(10px); } 75% { transform: translateX(-10px); } 100% { transform: translateX(0); } }
+        .float-heart { position: absolute; color: #ff4757; font-size: 32px; font-weight: bold; pointer-events: none; animation: floatUp 0.8s forwards; z-index: 5;}
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-80px) scale(1.5); } }
+    </style>
+</head>
+<body>
+
+    <div id="game-window">
+        <!-- 頂部狀態 -->
+        <div id="top-bar">
+            <span>❤️ 攻擊力：<span id="score">10</span></span>
+            <span>💰 貓幣：<span id="coins">0</span></span>
+            <span>❤️ 最大血量：<span id="max-hp-display">100</span></span>
+        </div>
+        
+        <!-- 畫面一：貓咪小窩 -->
+        <div id="room-screen">
+            <img id="cat" src="cat.png" alt="橘貓">
+            <div class="room-buttons">
+                <button id="btn-go-shop" class="game-btn">🛒 逛福利社</button>
+                <button id="btn-go-battle" class="game-btn">⚔️ 挑戰大魔王</button>
+            </div>
+        </div>
+
+        <!-- 畫面二：戰鬥畫面 -->
+        <div id="battle-screen">
+            <div class="hp-board">
+                <div>喵星勇士 HP <div class="hp-bar-bg"><div id="cat-hp" class="hp-bar-fill green" style="width:100%"></div></div></div>
+                <div style="text-align: right;">大魔王 HP <div class="hp-bar-bg"><div id="boss-hp" class="hp-bar-fill red" style="width:100%"></div></div></div>
+            </div>
+            <img id="battle-cat" src="cat.png">
+            <img id="boss" src="boss.png">
+            <div id="battle-ui">
+                <div id="battle-log">遭遇了死當大魔王！請選擇行動。</div>
+                <div>
+                    <button id="btn-attack" class="game-btn action-btn">🐾 貓爪攻擊</button>
+                    <button id="btn-heal" class="game-btn action-btn">🥫 喝冰美式(補血)</button>
+                    <button id="btn-escape" class="game-btn action-btn" style="background:#ccc;">🏃 逃跑</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 畫面三：福利社商店 -->
+        <div id="shop-screen">
+            <h1 class="shop-title">🛒 喵星福利社</h1>
+            <div class="shop-items-container">
+                <!-- 商品一 -->
+                <div class="shop-item-card">
+                    <div style="font-size: 50px;">📝</div>
+                    <h3>考古題秘笈</h3>
+                    <p>永久增加 15 點攻擊力</p>
+                    <button id="buy-atk" class="game-btn">💰 200 購買</button>
+                </div>
+                <!-- 商品二 -->
+                <div class="shop-item-card">
+                    <div style="font-size: 50px;">📚</div>
+                    <h3>厚重原文書</h3>
+                    <p>永久增加 50 點最大血量</p>
+                    <button id="buy-hp" class="game-btn">💰 300 購買</button>
+                </div>
+            </div>
+            <button id="btn-leave-shop" class="game-btn">🚪 回小窩</button>
+        </div>
+    </div>
+
+    <script>
+        // 核心數值
+        let score = 10; 
+        let coins = 0; 
+        let catMaxHP = 100, catCurrentHP = 100;
+        let bossMaxHP = 300, bossCurrentHP = 300;
+
+        // UI 綁定
+        const scoreDisplay = document.getElementById('score');
+        const coinsDisplay = document.getElementById('coins'); 
+        const maxHpDisplay = document.getElementById('max-hp-display');
+        
+        const roomScreen = document.getElementById('room-screen');
+        const battleScreen = document.getElementById('battle-screen');
+        const shopScreen = document.getElementById('shop-screen');
+        const battleLog = document.getElementById('battle-log');
+        
+        const catHpBar = document.getElementById('cat-hp');
+        const bossHpBar = document.getElementById('boss-hp');
+        const bossImg = document.getElementById('boss');
+        const battleCatImg = document.getElementById('battle-cat');
+
+        // 更新血條函數
+        function updateHPBar() {
+            catHpBar.style.width = (catCurrentHP / catMaxHP * 100) + '%';
+            bossHpBar.style.width = (bossCurrentHP / bossMaxHP * 100) + '%';
+        }
+
+        // --- 1. 小窩功能 ---
+        document.getElementById('cat').addEventListener('click', (e) => {
+            score += 2; 
+            scoreDisplay.innerText = score;
+            const heart = document.createElement('div');
+            heart.innerText = '❤️ +2';
+            heart.className = 'float-heart';
+            heart.style.left = `${e.clientX - document.getElementById('game-window').getBoundingClientRect().left - 20}px`;
+            heart.style.top = `${e.clientY - document.getElementById('game-window').getBoundingClientRect().top - 20}px`;
+            roomScreen.appendChild(heart);
+            setTimeout(() => heart.remove(), 800);
+        });
+
+        // 導航按鈕
+        document.getElementById('btn-go-battle').addEventListener('click', () => {
+            roomScreen.style.display = 'none';
+            battleScreen.style.display = 'block';
+            battleLog.innerText = "戰鬥開始！大魔王舉起了死當印章...";
+        });
+        document.getElementById('btn-go-shop').addEventListener('click', () => {
+            roomScreen.style.display = 'none';
+            shopScreen.style.display = 'block';
+        });
+        document.getElementById('btn-leave-shop').addEventListener('click', () => {
+            shopScreen.style.display = 'none';
+            roomScreen.style.display = 'block';
+        });
+        document.getElementById('btn-escape').addEventListener('click', () => {
+            catCurrentHP = catMaxHP; bossCurrentHP = bossMaxHP; updateHPBar();
+            battleScreen.style.display = 'none'; roomScreen.style.display = 'block';
+        });
+
+        // --- 2. 商店購買邏輯 ---
+        document.getElementById('buy-atk').addEventListener('click', () => {
+            if (coins >= 200) {
+                coins -= 200;
+                score += 15;
+                coinsDisplay.innerText = coins;
+                scoreDisplay.innerText = score;
+                alert('✨ 買下學長的考古題！攻擊力永久 +15！');
+            } else {
+                alert('窮光蛋貓咪！貓幣不夠喔！');
+            }
+        });
+
+        document.getElementById('buy-hp').addEventListener('click', () => {
+            if (coins >= 300) {
+                coins -= 300;
+                catMaxHP += 50;
+                catCurrentHP = catMaxHP; // 買了順便回滿血
+                coinsDisplay.innerText = coins;
+                maxHpDisplay.innerText = catMaxHP;
+                alert(`✨ 把原文書塞進衣服裡！最大血量提升到 ${catMaxHP}！`);
+            } else {
+                alert('窮光蛋貓咪！貓幣不夠喔！');
+            }
+        });
+
+        // --- 3. 戰鬥邏輯 ---
+        document.getElementById('btn-attack').addEventListener('click', () => {
+            if(bossCurrentHP <= 0 || catCurrentHP <= 0) return; 
+
+            // 玩家攻擊
+            let damage = score + Math.floor(Math.random() * 10);
+            bossCurrentHP -= damage;
+            if(bossCurrentHP < 0) bossCurrentHP = 0;
+            battleLog.innerText = `🐾 貓咪使出亂抓！對大魔王造成 ${damage} 點傷害！`;
+            bossImg.classList.add('shake'); setTimeout(() => bossImg.classList.remove('shake'), 300);
+            updateHPBar();
+
+            // 打贏結算
+            if (bossCurrentHP <= 0) {
+                battleLog.innerText = "✨ 大魔王碎裂了！掉落了 500 貓幣！";
+                setTimeout(() => {
+                    alert("🎉 恭喜！成功拍碎死當印章！\n💰 獲得 500 貓幣！\n⚠️ 大魔王怨氣加深，變得更強了...");
+                    coins += 500; coinsDisplay.innerText = coins;
+                    bossMaxHP += 200; bossCurrentHP = bossMaxHP; catCurrentHP = catMaxHP;
+                    updateHPBar();
+                    battleScreen.style.display = 'none'; roomScreen.style.display = 'block';
+                }, 800);
+                return;
+            }
+
+            // 魔王反擊
+            setTimeout(() => {
+                let bossDamage = 15 + Math.floor(Math.random() * 15);
+                catCurrentHP -= bossDamage;
+                if(catCurrentHP < 0) catCurrentHP = 0;
+                battleLog.innerText = `💥 大魔王蓋下死當印章！你受到了 ${bossDamage} 點傷害！`;
+                battleCatImg.classList.add('shake'); setTimeout(() => battleCatImg.classList.remove('shake'), 300);
+                updateHPBar();
+
+                // 被打死結算
+                if (catCurrentHP <= 0) {
+                    setTimeout(() => {
+                        alert("💀 慘遭死當... 被踢回小窩吧！");
+                        catCurrentHP = catMaxHP; bossCurrentHP = bossMaxHP; updateHPBar();
+                        battleScreen.style.display = 'none'; roomScreen.style.display = 'block';
+                    }, 800);
+                }
+            }, 800);
+        });
+
+        // 補血
+        document.getElementById('btn-heal').addEventListener('click', () => {
+            if(bossCurrentHP <= 0 || catCurrentHP <= 0) return;
+            catCurrentHP += 40; if(catCurrentHP > catMaxHP) catCurrentHP = catMaxHP;
+            battleLog.innerText = `🥫 喝下冰美式，恢復 40 點 HP！`;
+            updateHPBar();
+            
+            setTimeout(() => {
+                let bossDamage = 15 + Math.floor(Math.random() * 15);
+                catCurrentHP -= bossDamage; if(catCurrentHP < 0) catCurrentHP = 0;
+                battleLog.innerText = `💥 喝咖啡被偷襲！受到 ${bossDamage} 點傷害！`;
+                battleCatImg.classList.add('shake'); setTimeout(() => battleCatImg.classList.remove('shake'), 300);
+                updateHPBar();
+                if (catCurrentHP <= 0) {
+                    setTimeout(() => {
+                        alert("💀 嗆死... 被踢回小窩！");
+                        catCurrentHP = catMaxHP; bossCurrentHP = bossMaxHP; updateHPBar();
+                        battleScreen.style.display = 'none'; roomScreen.style.display = 'block';
+                    }, 800);
+                }
+            }, 800);
+        });
+    </script>
+</body>
+</html>
