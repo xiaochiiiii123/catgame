@@ -37,13 +37,13 @@
         #cat { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); width: 250px; cursor: pointer; }
         #cat:active { transform: translateX(-50%) scale(0.92); }
         
-        /* 底部按鈕區與推薦戰力 */
+        /* 底部按鈕區 */
         .room-bottom-right { position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; align-items: flex-end; }
-        .recommend-text { color: #ffeb3b; font-size: 16px; font-weight: bold; margin-bottom: 8px; text-shadow: 2px 2px 0 #000; background: rgba(0,0,0,0.5); padding: 4px 10px; border-radius: 8px;}
         .room-buttons { display: flex; gap: 10px; }
         
         #btn-go-battle { background: #ff4757; color: white; }
         #btn-go-shop { background: #3498db; color: white; }
+        #btn-go-gacha { background: #9b59b6; color: white; } 
 
         /* 戰鬥畫面 */
         #battle-screen { width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; position: absolute; top: 0; left: 0; }
@@ -60,13 +60,46 @@
         #battle-log { color: #ffeb3b; font-size: 18px; margin-bottom: 10px; height: 24px; }
 
         /* 商店畫面 */
-        #shop-screen { width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; position: absolute; top: 0; left: 0; padding-top: 30px; box-sizing: border-box; color: white; }
+        #shop-screen { width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; position: absolute; top: 0; left: 0; padding-top: 70px; box-sizing: border-box; color: white; }
         .shop-title { text-align: center; color: #ffaa00; font-size: 32px; margin-top: 10px; text-shadow: 2px 2px 0 #000; }
         .shop-items-container { display: flex; justify-content: center; gap: 20px; margin-top: 30px; flex-wrap: wrap;}
         .shop-item-card { background: #333; border: 4px solid #555; border-radius: 15px; padding: 15px; text-align: center; width: 200px; }
         .shop-item-card h3 { color: #2ecc71; margin-top: 0; font-size: 22px;}
         .shop-item-card p { color: #ccc; height: 50px; font-size: 14px;}
-        #btn-leave-shop { position: absolute; bottom: 20px; right: 20px; background: #95a5a6; }
+        .btn-leave { position: absolute; bottom: 20px; right: 20px; background: #95a5a6; }
+
+        /* 🎲 獨立盲盒機畫面 */
+        #gacha-screen { width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; position: absolute; top: 0; left: 0; padding-top: 70px; box-sizing: border-box; color: white; }
+        .gacha-preview { display: flex; justify-content: center; margin-top: 10px; }
+        .gacha-preview img { width: 400px; border: 4px solid #9b59b6; border-radius: 15px; box-shadow: 0 0 20px #9b59b6; }
+        
+        /* 獎池說明面板 */
+        .gacha-info {
+            background: #222; border: 2px solid #9b59b6; border-radius: 10px;
+            padding: 10px 20px; width: 450px; margin: 15px auto; text-align: left;
+            font-size: 14px; color: #ddd; line-height: 1.6;
+        }
+        
+        .gacha-actions { display: flex; justify-content: center; gap: 30px; margin-top: 15px; }
+        
+        /* 🏆 抽卡結果覆蓋視窗 */
+        #draw-result-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); z-index: 50; display: none;
+            flex-direction: column; align-items: center; justify-content: center;
+        }
+        #draw-result-box {
+            background: #222; border: 4px solid #ffaa00; border-radius: 15px;
+            padding: 20px; width: 450px; text-align: center; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+        }
+        #draw-result-box h2 { color: #ffaa00; margin-top: 0; margin-bottom: 15px; }
+        
+        /* 抽卡結果滾動文字區塊 */
+        #draw-details {
+            max-height: 200px; overflow-y: auto; background: #111; 
+            padding: 10px; border-radius: 8px; border: 1px solid #555;
+            font-size: 15px; text-align: left; margin-bottom: 15px; line-height: 1.8;
+        }
 
         /* 動效 */
         .shake { animation: shakeAnim 0.3s; }
@@ -79,7 +112,7 @@
 
     <div id="game-window">
         <div id="top-bar">
-            <span>⭐ 綜合戰力：<span id="total-power" style="color:#ffaa00;">150</span></span>
+            <span>⭐ 綜合戰力：<span id="total-power" style="color:#ffaa00;">120</span></span>
             <span>❤️ 攻：<span id="score">10</span> <span id="auto-status">(💻x0)</span></span>
             <span>❤️ 血：<span id="max-hp-display">100</span></span>
             <span>💰 幣：<span id="coins">0</span></span>
@@ -87,12 +120,10 @@
         
         <div id="room-screen">
             <img id="cat" src="cat.png" alt="橘貓">
-            
-            <!-- 右下角按鈕區與推薦戰力 -->
             <div class="room-bottom-right">
-                <div class="recommend-text">⚠️ 推薦戰力：<span id="rec-power">150</span></div>
                 <div class="room-buttons">
                     <button id="btn-go-shop" class="game-btn">🛒 逛福利社</button>
+                    <button id="btn-go-gacha" class="game-btn">🎲 盲盒機</button>
                     <button id="btn-go-battle" class="game-btn">⚔️ 挑戰大魔王</button>
                 </div>
             </div>
@@ -136,41 +167,67 @@
                 <div class="shop-item-card">
                     <div style="font-size: 40px;">💻</div>
                     <h3>爆肝資工室友</h3>
-                    <p>每秒自動幫你點擊 +1 攻擊力</p>
+                    <p>每秒自動幫你點擊 +1 攻</p>
                     <button id="buy-auto" class="game-btn" style="background: #e74c3c;">💰 800 聘用</button>
                 </div>
             </div>
-            <button id="btn-leave-shop" class="game-btn">🚪 回小窩</button>
+            <button id="btn-leave-shop" class="game-btn btn-leave">🚪 回小窩</button>
         </div>
+
+        <!-- ★ 獨立盲盒機畫面 (含獎池說明) ★ -->
+        <div id="gacha-screen">
+            <h1 class="shop-title" style="color: #9b59b6; margin-top:0;">🎲 期末盲盒機</h1>
+            <div class="gacha-preview">
+                <img src="image_4.png" alt="抽卡預覽">
+            </div>
+            
+            <div class="gacha-info">
+                <div style="text-align: center; color: #ffaa00; font-weight: bold; margin-bottom: 5px;">📜 獎池機率與內容</div>
+                <div><span style="color:#e74c3c;">🟪 UR (2%)：</span>系主任的免死金牌 <span style="color:#2ecc71;">(永久攻+50)</span></div>
+                <div><span style="color:#f1c40f;">🟨 SSR (8%)：</span>傳說中的學霸筆記 <span style="color:#2ecc71;">(永久攻+10)</span></div>
+                <div><span style="color:#3498db;">🟦 SR (20%)：</span>提神特濃美式咖啡 <span style="color:#2ecc71;">(最大血量+20)</span></div>
+                <div><span style="color:#95a5a6;">⬜ R (70%)：</span>學長陳年的臭襪子 <span style="color:#aaa;">(銘謝惠顧)</span></div>
+            </div>
+
+            <div class="gacha-actions">
+                <button id="btn-draw-1" class="game-btn" style="background: #3498db; color: white;">💰 50 單抽</button>
+                <button id="btn-draw-10" class="game-btn" style="background: #e74c3c; color: white;">💰 500 十連抽</button>
+            </div>
+            <button id="btn-leave-gacha" class="game-btn btn-leave">🚪 回小窩</button>
+        </div>
+
+        <!-- 🏆 抽卡結果結算視窗 -->
+        <div id="draw-result-overlay">
+            <div id="draw-result-box">
+                <h2>🎰 鑑定結果</h2>
+                <div id="draw-text"></div>
+                <button id="btn-close-draw" class="game-btn">確認收下</button>
+            </div>
+        </div>
+
     </div>
 
     <script>
-// --- 核心數值 ---
         let score = 10; 
         let coins = 0; 
         let roommates = 0; 
         let catMaxHP = 100, catCurrentHP = 100;
         
-        // ★ 魔王數值「不改」，保持 V1.1 的平衡 ★
         let bossLevel = 1;         
         let bossBaseDamage = 8;     
         let bossMaxHP = 150, bossCurrentHP = 150; 
-        
-        // ★ 初始推薦戰力配合新公式，下調至 120 ★
-        let recommendPowerValue = 120; 
 
-        // 綁定 UI
         const scoreDisplay = document.getElementById('score');
         const coinsDisplay = document.getElementById('coins'); 
         const maxHpDisplay = document.getElementById('max-hp-display');
         const totalPowerDisplay = document.getElementById('total-power');
-        const recPowerDisplay = document.getElementById('rec-power');
         const autoStatus = document.getElementById('auto-status');
         const bossNameDisplay = document.getElementById('boss-name-display'); 
         
         const roomScreen = document.getElementById('room-screen');
         const battleScreen = document.getElementById('battle-screen');
         const shopScreen = document.getElementById('shop-screen');
+        const gachaScreen = document.getElementById('gacha-screen');
         const battleLog = document.getElementById('battle-log');
         
         const catHpBar = document.getElementById('cat-hp');
@@ -178,25 +235,17 @@
         const bossImg = document.getElementById('boss');
         const battleCatImg = document.getElementById('battle-cat');
 
-        // 更新血條
         function updateHPBar() {
             catHpBar.style.width = (catCurrentHP / catMaxHP * 100) + '%';
             bossHpBar.style.width = (bossCurrentHP / bossMaxHP * 100) + '%';
         }
 
-        // ★ 戰力演算法修改：大幅降低攻擊力佔比 (改為 x2) ★
         function refreshTotalPower() {
             let currentPower = (score * 2) + catMaxHP;
             totalPowerDisplay.innerText = currentPower;
-            
-            if(currentPower < recommendPowerValue) {
-                totalPowerDisplay.style.color = "#e74c3c"; // 戰力不足：紅
-            } else {
-                totalPowerDisplay.style.color = "#2ecc71"; // 戰力達標：綠
-            }
+            totalPowerDisplay.style.color = "#ffaa00"; 
         }
 
-        // 自動掛機
         setInterval(() => {
             if (roommates > 0) {
                 score += roommates; 
@@ -205,7 +254,6 @@
             }
         }, 1000);
 
-        // 摸貓咪
         document.getElementById('cat').addEventListener('click', (e) => {
             score += 2; 
             scoreDisplay.innerText = score;
@@ -220,124 +268,170 @@
             setTimeout(() => heart.remove(), 800);
         });
 
-        // 導航
         document.getElementById('btn-go-battle').addEventListener('click', () => {
-            roomScreen.style.display = 'none';
-            battleScreen.style.display = 'block';
-            battleLog.innerText = `戰鬥開始！Lv.${bossLevel} 的大魔王出現了！`;
+            roomScreen.style.display = 'none'; battleScreen.style.display = 'block';
+            let randomBaseHP = 150 + Math.floor(Math.random() * 151); 
+            bossMaxHP = randomBaseHP * bossLevel; bossCurrentHP = bossMaxHP;
+            bossBaseDamage = (5 + Math.floor(Math.random() * 5)) * bossLevel;
+
+            let safeScore = score > 0 ? score : 1; 
+            let difficultyRatio = Math.ceil(bossCurrentHP / safeScore);
+            let starRating = "", starColor = "";
+            if (difficultyRatio <= 3) { starRating = "★ (輕鬆虐菜)"; starColor = "#2ecc71"; } 
+            else if (difficultyRatio === 4) { starRating = "★★ (勢均力敵)"; starColor = "#f1c40f"; } 
+            else { starRating = "★★★ (極度危險！快逃)"; starColor = "#e74c3c"; }
+
+            bossNameDisplay.innerHTML = `死當大魔王 Lv.${bossLevel} <br><span style="color:${starColor}; font-size:16px;">偵察難度：${starRating}</span>`;
+            battleLog.innerText = `遭遇了隨機魔王！系統偵察難度為 ${starRating}！`;
             updateHPBar(); 
         });
-        document.getElementById('btn-go-shop').addEventListener('click', () => {
-            roomScreen.style.display = 'none'; shopScreen.style.display = 'block';
-        });
-        document.getElementById('btn-leave-shop').addEventListener('click', () => {
-            shopScreen.style.display = 'none'; roomScreen.style.display = 'block';
-        });
-        document.getElementById('btn-escape').addEventListener('click', () => {
-            catCurrentHP = catMaxHP; bossCurrentHP = bossMaxHP; updateHPBar();
-            battleScreen.style.display = 'none'; roomScreen.style.display = 'block';
-        });
 
-        // 商店
+        document.getElementById('btn-go-shop').addEventListener('click', () => { roomScreen.style.display = 'none'; shopScreen.style.display = 'block'; });
+        document.getElementById('btn-leave-shop').addEventListener('click', () => { shopScreen.style.display = 'none'; roomScreen.style.display = 'block'; });
+        
+        document.getElementById('btn-go-gacha').addEventListener('click', () => { roomScreen.style.display = 'none'; gachaScreen.style.display = 'block'; });
+        document.getElementById('btn-leave-gacha').addEventListener('click', () => { gachaScreen.style.display = 'none'; roomScreen.style.display = 'block'; });
+
+        document.getElementById('btn-escape').addEventListener('click', () => { catCurrentHP = catMaxHP; updateHPBar(); battleScreen.style.display = 'none'; roomScreen.style.display = 'block'; });
+
         document.getElementById('buy-atk').addEventListener('click', () => {
-            if (coins >= 200) { 
-                coins -= 200; score += 15; 
-                coinsDisplay.innerText = coins; scoreDisplay.innerText = score; 
-                refreshTotalPower();
-                alert('✨ 攻擊力永久 +15！'); 
-            } else alert('貓幣不夠喔！');
+            if (coins >= 200) { coins -= 200; score += 15; coinsDisplay.innerText = coins; scoreDisplay.innerText = score; refreshTotalPower(); alert('✨ 攻擊力永久 +15！'); } else alert('貓幣不夠喔！');
         });
         document.getElementById('buy-hp').addEventListener('click', () => {
-            if (coins >= 300) { 
-                coins -= 300; catMaxHP += 50; catCurrentHP = catMaxHP; 
-                coinsDisplay.innerText = coins; maxHpDisplay.innerText = catMaxHP; 
-                refreshTotalPower();
-                alert(`✨ 最大血量提升到 ${catMaxHP}！`); 
-            } else alert('貓幣不夠喔！');
+            if (coins >= 300) { coins -= 300; catMaxHP += 50; catCurrentHP = catMaxHP; coinsDisplay.innerText = coins; maxHpDisplay.innerText = catMaxHP; refreshTotalPower(); alert(`✨ 最大血量提升到 ${catMaxHP}！`); } else alert('貓幣不夠喔！');
         });
         document.getElementById('buy-auto').addEventListener('click', () => {
-            if (coins >= 800) {
-                coins -= 800; roommates += 1; coinsDisplay.innerText = coins;
-                autoStatus.style.display = 'inline'; autoStatus.innerText = `(💻x${roommates})`;
-                alert(`✨ 成功聘用爆肝室友！`);
-            } else alert('貓幣不夠喔！');
+            if (coins >= 800) { coins -= 800; roommates += 1; coinsDisplay.innerText = coins; autoStatus.style.display = 'inline'; autoStatus.innerText = `(💻x${roommates})`; alert(`✨ 成功聘用爆肝室友！`); } else alert('貓幣不夠喔！');
+        });
+
+        // =====================================
+        // 🎲 文字化抽卡核心邏輯
+        // =====================================
+        function performDraw(times) {
+            let cost = times * 50; 
+            if (coins < cost) {
+                alert('窮光蛋！貓幣不夠抽卡喔！');
+                return;
+            }
+            
+            coins -= cost;
+            coinsDisplay.innerText = coins;
+
+            let addAtk = 0;
+            let addHp = 0;
+            let drawLog = []; // 紀錄每一抽拿到的文字內容
+
+            // 執行抽卡
+            for (let i = 0; i < times; i++) {
+                let roll = Math.random() * 100;
+                if (roll < 2) { 
+                    addAtk += 50; 
+                    drawLog.push("<span style='color:#e74c3c;'>🟪 UR：系主任的免死金牌 (攻+50)</span>");
+                } else if (roll < 10) { 
+                    addAtk += 10; 
+                    drawLog.push("<span style='color:#f1c40f;'>🟨 SSR：傳說中的學霸筆記 (攻+10)</span>");
+                } else if (roll < 30) { 
+                    addHp += 20;   
+                    drawLog.push("<span style='color:#3498db;'>🟦 SR：提神特濃美式咖啡 (血+20)</span>");
+                } else { 
+                    drawLog.push("<span style='color:#95a5a6;'>⬜ R：學長陳年的臭襪子 (銘謝惠顧)</span>");
+                }
+            }
+
+            // 套用屬性
+            score += addAtk;
+            catMaxHP += addHp;
+            catCurrentHP += addHp;
+
+            scoreDisplay.innerText = score;
+            maxHpDisplay.innerText = catMaxHP;
+            refreshTotalPower();
+            updateHPBar();
+
+            // 組合戰報 HTML
+            let logHTML = drawLog.join("<br>");
+            let summaryHTML = `
+                <div style="margin-top:15px; font-weight:bold;">
+                    <div style="color:#2ecc71;">✨ 本次總計獲得加成：</div>
+                    <div>⚔️ 攻擊力 <span style="color:#2ecc71;">+${addAtk}</span> | ❤️ 最大血量 <span style="color:#2ecc71;">+${addHp}</span></div>
+                </div>
+            `;
+
+            document.getElementById('draw-text').innerHTML = `
+                <div id="draw-details">${logHTML}</div>
+                ${summaryHTML}
+            `;
+            document.getElementById('draw-result-overlay').style.display = 'flex';
+        }
+
+        document.getElementById('btn-draw-1').addEventListener('click', () => performDraw(1));
+        document.getElementById('btn-draw-10').addEventListener('click', () => performDraw(10));
+        
+        document.getElementById('btn-close-draw').addEventListener('click', () => {
+            document.getElementById('draw-result-overlay').style.display = 'none';
         });
 
         // 戰鬥邏輯
         document.getElementById('btn-attack').addEventListener('click', () => {
             if(bossCurrentHP <= 0 || catCurrentHP <= 0) return; 
-            
             let damage = score + Math.floor(Math.random() * 10);
             bossCurrentHP -= damage; if(bossCurrentHP < 0) bossCurrentHP = 0;
-            battleLog.innerText = `🐾 貓咪使出亂抓！對大魔王造成 ${damage} 點傷害！`;
+            battleLog.innerText = `🐾 貓咪使出亂抓！造成 ${damage} 點傷害！`;
             bossImg.classList.add('shake'); setTimeout(() => bossImg.classList.remove('shake'), 300);
             updateHPBar();
 
-            // 打贏結算與魔王升級
             if (bossCurrentHP <= 0) {
-                battleLog.innerText = "✨ 大魔王碎裂了！掉落了 500 貓幣！";
+                battleLog.innerText = "✨ 大魔王碎裂了！掉落 500 貓幣！";
                 setTimeout(() => {
-                    bossLevel++;
-                    bossMaxHP += 150;      
-                    bossBaseDamage += 8;   
-                    
-                    // ★ 配合新公式，每次魔王升級，推薦戰力只增加 100 ★
-                    recommendPowerValue += 100;
-                    recPowerDisplay.innerText = recommendPowerValue;
-                    refreshTotalPower(); 
-                    
-                    bossNameDisplay.innerText = `死當大魔王 Lv.${bossLevel}`;
-                    
-                    alert(`🎉 恭喜打倒魔王！💰 獲得 500 貓幣！\n⚠️ 魔王進化為 Lv.${bossLevel}，推薦戰力提升至 ${recommendPowerValue}！`);
-                    
+                    bossLevel++; refreshTotalPower(); 
+                    alert(`🎉 恭喜打倒魔王！💰 獲得 500 貓幣！\n⚠️ 魔王等級提升為 Lv.${bossLevel}！`);
                     coins += 500; coinsDisplay.innerText = coins;
-                    bossCurrentHP = bossMaxHP; catCurrentHP = catMaxHP; updateHPBar();
+                    catCurrentHP = catMaxHP; updateHPBar();
                     battleScreen.style.display = 'none'; roomScreen.style.display = 'block';
                 }, 800);
                 return;
             }
-
-            // 魔王反擊 
             setTimeout(() => {
                 let bossDamage = bossBaseDamage + Math.floor(Math.random() * 10);
                 catCurrentHP -= bossDamage; if(catCurrentHP < 0) catCurrentHP = 0;
-                battleLog.innerText = `💥 Lv.${bossLevel} 魔王重擊！你受到了 ${bossDamage} 點傷害！`;
+                battleLog.innerText = `💥 魔王重擊！你受到了 ${bossDamage} 點傷害！`;
                 battleCatImg.classList.add('shake'); setTimeout(() => battleCatImg.classList.remove('shake'), 300);
                 updateHPBar();
 
                 if (catCurrentHP <= 0) {
                     setTimeout(() => {
-                        alert("💀 慘遭死當... 被踢回小窩吧！");
-                        catCurrentHP = catMaxHP; bossCurrentHP = bossMaxHP; updateHPBar();
+                        alert("💀 慘遭死當... 逃回小窩吧！");
+                        catCurrentHP = catMaxHP; updateHPBar();
                         battleScreen.style.display = 'none'; roomScreen.style.display = 'block';
                     }, 800);
                 }
             }, 800);
         });
 
-        // 補血
         document.getElementById('btn-heal').addEventListener('click', () => {
             if(bossCurrentHP <= 0 || catCurrentHP <= 0) return;
-            catCurrentHP += 40; if(catCurrentHP > catMaxHP) catCurrentHP = catMaxHP;
-            battleLog.innerText = `🥫 喝下冰美式，恢復 40 點 HP！`; updateHPBar();
+            let healAmount = Math.floor(catMaxHP * 0.2);
+            catCurrentHP += healAmount; 
+            if(catCurrentHP > catMaxHP) catCurrentHP = catMaxHP;
+            battleLog.innerText = `🥫 喝冰美式，恢復 ${healAmount} HP！`; 
+            updateHPBar();
             
             setTimeout(() => {
-                let bossDamage = bossBaseDamage + Math.floor(Math.random() * 10);
+                let rawDamage = bossBaseDamage + Math.floor(Math.random() * 10);
+                let bossDamage = Math.floor(rawDamage / 2); 
                 catCurrentHP -= bossDamage; if(catCurrentHP < 0) catCurrentHP = 0;
-                battleLog.innerText = `💥 喝咖啡被偷襲！受到 ${bossDamage} 點傷害！`;
+                battleLog.innerText = `🛡️ 護體減傷！受到 ${bossDamage} 點傷害！`;
                 battleCatImg.classList.add('shake'); setTimeout(() => battleCatImg.classList.remove('shake'), 300); updateHPBar();
                 if (catCurrentHP <= 0) {
                     setTimeout(() => {
-                        alert("💀 嗆死... 被踢回小窩！");
-                        catCurrentHP = catMaxHP; bossCurrentHP = bossMaxHP; updateHPBar();
+                        alert("💀 即使喝了咖啡還是被死當... 退回小窩！");
+                        catCurrentHP = catMaxHP; updateHPBar();
                         battleScreen.style.display = 'none'; roomScreen.style.display = 'block';
                     }, 800);
                 }
             }, 800);
         });
 
-        // 遊戲啟動時先算一次戰力
-        recPowerDisplay.innerText = recommendPowerValue;
         refreshTotalPower();
     </script>
 </body>
