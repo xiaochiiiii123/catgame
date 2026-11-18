@@ -113,7 +113,7 @@
     <div id="game-window">
         <div id="top-bar">
             <span>⭐ 綜合戰力：<span id="total-power" style="color:#ffaa00;">120</span></span>
-            <span>❤️ 攻：<span id="score">10</span> <span id="auto-status">(💻x0)</span></span>
+            <span>⚔️ 攻：<span id="score">10</span> <span id="auto-status">(💻x0)</span></span>
             <span>❤️ 血：<span id="max-hp-display">100</span></span>
             <span>💰 幣：<span id="coins">0</span></span>
         </div>
@@ -143,7 +143,7 @@
                 <div id="battle-log">遭遇了死當大魔王！請選擇行動。</div>
                 <div>
                     <button id="btn-attack" class="game-btn action-btn">🐾 貓爪攻擊</button>
-                    <button id="btn-heal" class="game-btn action-btn">🥫 喝冰美式(補血)</button>
+                    <button id="btn-heal" class="game-btn action-btn">☕ 喝冰美式(補血)</button>
                     <button id="btn-escape" class="game-btn action-btn" style="background:#ccc;">🏃 逃跑</button>
                 </div>
             </div>
@@ -413,7 +413,7 @@
             let healAmount = Math.floor(catMaxHP * 0.2);
             catCurrentHP += healAmount; 
             if(catCurrentHP > catMaxHP) catCurrentHP = catMaxHP;
-            battleLog.innerText = `🥫 喝冰美式，恢復 ${healAmount} HP！`; 
+            battleLog.innerText = `☕ 喝冰美式，恢復 ${healAmount} HP！`; 
             updateHPBar();
             
             setTimeout(() => {
